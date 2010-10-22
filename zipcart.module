@@ -164,35 +164,40 @@ function zipcart_form_alter(&$form, &$form_state, $form_id) {
  * so we can warn if they do not.
  */
 function zipcart_add_file_to_cart($ajax = FALSE) {
-  watchdog('zipcart', 'start');
   $path_parts = func_get_args();
   array_shift($path_parts); // remove ajax flag
   // FIXME: we can't add the file 'sites/default/files/AJAX/myfile.txt' to our cart (?)
   $path       = implode('/', $path_parts);
-  watchdog('zipcart', 'path 1: '. $path);
   $path       = str_replace(ZIPCART_PATH_ADD, '', $path);
   $path       = trim($path, '/');
-  watchdog('zipcart', 'path 2: '. $path);
   $filename   = basename($path);
-  $headers = module_invoke_all('file_download', $path);
+
   $success = FALSE ;
-  watchdog('zipcart', 'headers: '. print_r($headers,1));
+
+  $headers = module_invoke_all('file_download', $path);
   if ( !in_array(-1, $headers) ) {
-    $_SESSION['zipcart']['files'][] = $path ;
-    $success = TRUE ;
-    watchdog('zipcart', 'Win!');
+    // ok, hook_file_download didn't object
+    $files = array( $path ) ;
+    $files = module_invoke_all('filterzip', $files);
+  
+    if ( !empty( $files ) ) {
+      $_SESSION['zipcart']['files'][] = $path ;
+      $success = TRUE ;  
+    }
   }
+
+//  dpm($files);
+//  dpm(array($success), 'success');
+
   $_SESSION['zipcart']['files'] = array_unique($_SESSION['zipcart']['files']);
   $result = array(
     'cart' => $_SESSION['zipcart']['files'],
     'result' => $success,
   ) ;
   if ( $ajax ) {
-    watchdog('zipcart', 'Ajax success');
     die(drupal_json($result));
   }
   else {
-    watchdog('zipcart', 'Default success');
     if ( $success ) {
       drupal_set_message(t('The file !filename has been added to your cart.', array('!filename' => $filename)));
     }
@@ -213,23 +218,21 @@ function zipcart_get_zip() {
   }
   else {
     $files = $_SESSION['zipcart']['files'] ;
-    foreach ( module_implements('zipmethods') as $module ) {
-      $function = $module .'_filterzip' ;
-      $function($files) ;
-      if ( !empty($files) ) {      
-        $zipcart_dir = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') ;
-        if (file_check_directory($zipcart_dir, 1)) {
-          $methods = _zipcart_get_available_methods() ;
-          $zipmethod = variable_get('zipcart_zip_method', '');
-          if ( isset( $methods[$zipmethod] ) ) {
-            $zipfunction = $methods[$zipmethod]['callback'] ;
-            if ( !$zipfunction($_SESSION['zipcart']['files']) ) {
-              return 'Download failed.' ;
-            }
-            else {
-              drupal_set_message('Zip downloaded');
-              return TRUE ;
-            }
+    $files = module_invoke_all('filterzip', $files);
+    
+    if ( !empty($files) ) {      
+      $zipcart_dir = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') ;
+      if (file_check_directory($zipcart_dir, 1)) {
+        $methods = _zipcart_get_available_methods() ;
+        $zipmethod = variable_get('zipcart_zip_method', '');
+        if ( isset( $methods[$zipmethod] ) ) {
+          $zipfunction = $methods[$zipmethod]['callback'] ;
+          if ( !$zipfunction($files) ) {
+            return 'Download failed.' ;
+          }
+          else {
+            drupal_set_message('Zip downloaded');
+            return TRUE ;
           }
         }
       }
@@ -250,6 +253,13 @@ function zipcart_filterzip(&$files) {
   // $included = array( 'sites/files/.*' ) ;
   // always include a certain file
   // $add = array( 'sites/default/files/README.txt' ) ;
+  foreach ( $files as $i => &$file ) {
+    if ( !file_check_location($file, file_directory_path()) ) { 
+      watchdog('zipcart', t('forbidding download of !file', 
+                              array('!file' => $file)));      
+      unset($files[$i]);
+    }
+  }
   return $files ;
 }
 
@@ -329,7 +339,7 @@ function theme_zipcart_download($text, $path, $options=array()) {
     'query' => _zipcart_get_destination_alias(),
   ) ;
   $options = array_merge($default_options, $options);
-  dpm($options);
+//  dpm($options);
 //  dpm(array($text, $path, $options));
   return l($text, ZIPCART_PATH_ADD .'/'. $path, $options);
 }
