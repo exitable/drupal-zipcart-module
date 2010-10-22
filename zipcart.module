@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * TODO:
+ * 
+ * prevent access outside files dir
+ *
+ * limit number of files in zip
+ * limit size of zip
+ */
+
 define('ZIPCART_PATH_ADD', 'zipcart/add');
 define('ZIPCART_PATH_GET', 'zipcart/get');
 
@@ -203,22 +212,45 @@ function zipcart_get_zip() {
     drupal_goto();
   }
   else {
-    $zipcart_dir = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') ;
-    if (file_check_directory($zipcart_dir, 1)) {
-      $methods = _zipcart_get_available_methods() ;
-      $zipmethod = variable_get('zipcart_zip_method', '');
-      if ( isset( $methods[$zipmethod] ) ) {
-        $zipfunction = $methods[$zipmethod]['callback'] ;
-        if ( !$zipfunction($_SESSION['zipcart']['files']) ) {
-          return 'Download failed.' ;
-        }
-        else {
-          drupal_set_message('Zip downloaded');
-          return TRUE ;
+    $files = $_SESSION['zipcart']['files'] ;
+    foreach ( module_implements('zipmethods') as $module ) {
+      $function = $module .'_filterzip' ;
+      $function($files) ;
+      if ( !empty($files) ) {      
+        $zipcart_dir = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') ;
+        if (file_check_directory($zipcart_dir, 1)) {
+          $methods = _zipcart_get_available_methods() ;
+          $zipmethod = variable_get('zipcart_zip_method', '');
+          if ( isset( $methods[$zipmethod] ) ) {
+            $zipfunction = $methods[$zipmethod]['callback'] ;
+            if ( !$zipfunction($_SESSION['zipcart']['files']) ) {
+              return 'Download failed.' ;
+            }
+            else {
+              drupal_set_message('Zip downloaded');
+              return TRUE ;
+            }
+          }
         }
       }
     }
   }
+}
+
+/**
+ * Preprocess the list of files.
+ *
+ * You can add files.
+ * You can filter files.
+ */
+function zipcart_filterzip(&$files) {
+  // don't ever share these files
+  // $excluded = array( 'sites/.*settings.*php' ) ;
+  // only ever include these files 
+  // $included = array( 'sites/files/.*' ) ;
+  // always include a certain file
+  // $add = array( 'sites/default/files/README.txt' ) ;
+  return $files ;
 }
 
 /**
@@ -254,7 +286,6 @@ function _zipcart_phpzip($files) {
     }
   }
   else {
-die('x');
     drupal_set_message(t('Unable to create file !filename.', array('!filename' => $filename)), 'error');
     drupal_access_denied();
     return FALSE ;
@@ -265,7 +296,7 @@ die('x');
  * 
  */
 function _zipcart_zip_filename() {
-  $filename = 'Files from MNC.tv - '. date('Y-m-d_Hi') .'.zip' ;
+  $filename = 'Files - '. date('Y-m-d_Hi') .'.zip' ;
   return $filename ;
 }
 
@@ -295,8 +326,10 @@ function theme_zipcart_download($text, $path, $options=array()) {
     'attributes' => array( 
       'class' => 'zipcart',
     ),
+    'query' => _zipcart_get_destination_alias(),
   ) ;
-  $options = array_merge($options, $default_options);
+  $options = array_merge($default_options, $options);
+  dpm($options);
 //  dpm(array($text, $path, $options));
   return l($text, ZIPCART_PATH_ADD .'/'. $path, $options);
 }
