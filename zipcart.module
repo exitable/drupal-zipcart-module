@@ -1,0 +1,302 @@
+<?php
+
+define('ZIPCART_PATH_ADD', 'zipcart/add');
+define('ZIPCART_PATH_GET', 'zipcart/get');
+
+/**
+ * Implementation of hook_menu()
+ */
+function zipcart_menu() {
+  $items['admin/settings/zipcart'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'zipcart_settings_form' ),
+    'title' => 'ZipCart',
+    'access arguments' => array( 'administer site configuration' ),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'zipcart.admin.inc',
+  ) ;
+  $items[ZIPCART_PATH_ADD] = array(
+    'page callback' => 'zipcart_add_file_to_cart',
+    'page arguments' => array( FALSE ),
+    'title' => 'Add file to Download Cart',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  ) ;
+  $items[ZIPCART_PATH_ADD .'/AJAX'] = array(
+    'page callback' => 'zipcart_add_file_to_cart',
+    'page arguments' => array( TRUE ),
+    'title' => 'Add file to Download Cart',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  ) ;
+  $items['zipcart/get'] = array(
+    'page callback' => 'zipcart_get_zip',
+    'title' => 'Download Cart Files',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+  ) ;
+  return $items ;
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function zipcart_init() {
+  drupal_add_js(drupal_get_path('module', 'zipcart') . '/zipcart.js');
+  drupal_add_js(array('zipcart' => array('path_add' => ZIPCART_PATH_ADD, 'path_add_ajax' => ZIPCART_PATH_ADD .'/AJAX')), 'setting');
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function zipcart_theme($existing, $type, $theme, $path) {
+  return array(
+    'zipcart_block_downloads' => array(
+      'template' => 'zipcart-block-downloads',
+      'arguments' => array(),
+    ),
+    'zipcart_download' => array(
+      'arguments' => array(
+        'text' => 'Download',
+        'path' => NULL,
+        'options' => array(),
+      ),
+    ),
+  ) ;
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function zipcart_perm() {
+  return array(
+    'access zipcart downloads',
+  ) ;
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function zipcart_block($op='list', $delta=0, $edit=array()) {
+  switch ($op) {
+    case 'list' :
+      $blocks[0] = array(
+        'info'  => t('ZipCart Downloads'),
+        'cache' => BLOCK_NO_CACHE,
+      ) ;
+      return $blocks ;
+    case 'view':
+      if ( user_access('access zipcart downloads') ) {
+        switch ($delta) {
+          case '0':
+            $block = array(
+              'subject' => t('My Downloads'),
+              'content' => theme('zipcart_block_downloads'),
+            );
+            return $block ;
+        }
+      }
+    case 'configure':
+    case 'save':
+      return ;
+    
+  }
+}
+
+/**
+ * Implementation of hook_file_download.
+ */
+function zipcart_file_download($filepath) {
+  // dpm($filepath);
+}
+
+/**
+ * Implementation of hook_zipmethods.
+ */
+function zipcart_zipmethods() {
+  $methods['zip_builtin'] = array(
+    'title'    => 'PHP Zip extension',
+    'callback' => '_zipcart_phpzip',
+  ) ;
+  $methods['zip_pecl'] = array(
+    'title'    => 'PECL Zip',
+    'callback' => '_zipcart_peclzip',
+  ) ;
+  $methods['zip_external'] = array(
+    'title'    => 'External Zip binary',
+    'callback' => '_zipcart_zipbinary',
+  ) ;
+  return $methods;
+}
+
+/**
+ * Return an array of zip methods
+ */
+function _zipcart_get_available_methods() {
+  foreach ( module_implements('zipmethods') as $module ) {
+    $function = $module .'_zipmethods' ;
+    if ( $methods = $function() ) {
+      if ( is_array($methods) ) {
+        foreach( $methods as $key => $method ) {
+          $avail_methods[$key] = $method ;
+        }
+      }
+    }
+  }
+  return $avail_methods ;
+}
+
+function zipcart_form_alter(&$form, &$form_state, $form_id) {
+
+}
+
+/**
+ * Add a file path to a user's $_SESSION. Check the user has permission to access the file here,
+ * so we can warn if they do not.
+ */
+function zipcart_add_file_to_cart($ajax = FALSE) {
+  watchdog('zipcart', 'start');
+  $path_parts = func_get_args();
+  array_shift($path_parts); // remove ajax flag
+  // FIXME: we can't add the file 'sites/default/files/AJAX/myfile.txt' to our cart (?)
+  $path       = implode('/', $path_parts);
+  watchdog('zipcart', 'path 1: '. $path);
+  $path       = str_replace(ZIPCART_PATH_ADD, '', $path);
+  $path       = trim($path, '/');
+  watchdog('zipcart', 'path 2: '. $path);
+  $filename   = basename($path);
+  $headers = module_invoke_all('file_download', $path);
+  $success = FALSE ;
+  watchdog('zipcart', 'headers: '. print_r($headers,1));
+  if ( !in_array(-1, $headers) ) {
+    $_SESSION['zipcart']['files'][] = $path ;
+    $success = TRUE ;
+    watchdog('zipcart', 'Win!');
+  }
+  $_SESSION['zipcart']['files'] = array_unique($_SESSION['zipcart']['files']);
+  $result = array(
+    'cart' => $_SESSION['zipcart']['files'],
+    'result' => $success,
+  ) ;
+  if ( $ajax ) {
+    watchdog('zipcart', 'Ajax success');
+    die(drupal_json($result));
+  }
+  else {
+    watchdog('zipcart', 'Default success');
+    if ( $success ) {
+      drupal_set_message(t('The file !filename has been added to your cart.', array('!filename' => $filename)));
+    }
+    else {
+      drupal_set_message(t('The file !filename could not be added to your cart.', array('!filename' => $filename)));    
+    }
+    drupal_goto();
+  }
+}
+
+/**
+ * Get the files as a zip
+ */
+function zipcart_get_zip() {
+  if ( empty( $_SESSION['zipcart']['files'] ) ) {
+    drupal_set_message('Sorry, there are no files queued for you to download.');
+    drupal_goto();
+  }
+  else {
+    $zipcart_dir = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') ;
+    if (file_check_directory($zipcart_dir, 1)) {
+      $methods = _zipcart_get_available_methods() ;
+      $zipmethod = variable_get('zipcart_zip_method', '');
+      if ( isset( $methods[$zipmethod] ) ) {
+        $zipfunction = $methods[$zipmethod]['callback'] ;
+        if ( !$zipfunction($_SESSION['zipcart']['files']) ) {
+          return 'Download failed.' ;
+        }
+        else {
+          drupal_set_message('Zip downloaded');
+          return TRUE ;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Zip callback: PHP zip extension
+ */
+function _zipcart_phpzip($files) {
+  $zip = new ZipArchive;
+  $filename = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') .'/'. time() .'.zip' ;
+  $zip_open = $zip->open($filename, ZIPARCHIVE::CREATE) ;
+  if ($zip_open === TRUE) {
+    // would be nice to handle duplicate filenames here
+    foreach ( $files as $file ) {
+      $zip->addFile($file, basename($file));
+    }
+    $zip->close();
+    $headers = module_invoke_all('file_download', $filename);
+    if (in_array(-1, $headers)) {
+      return drupal_access_denied();
+    }
+    if (count($headers)) {
+      // need to remove any content-disposition headers here
+      foreach ( $headers as $k => $header ) {
+        if ( stristr($header, 'Content-Disposition:') === 0 ) {
+          unset($headers[$k]) ;
+        }
+      }
+      $headers[] = 'Content-Disposition: attachment; filename="'. _zipcart_zip_filename() .'"' ;
+      // FIXME: it would be nice to wait until the file transfer completes before we clear the 
+      // files out of the session. However, if we do that, the user can't add new files to their
+      // cart until the zip is downloaded. So we'll do this first.
+      $_SESSION['zipcart']['files'] = array();
+      file_transfer($filename, $headers);
+    }
+  }
+  else {
+die('x');
+    drupal_set_message(t('Unable to create file !filename.', array('!filename' => $filename)), 'error');
+    drupal_access_denied();
+    return FALSE ;
+  }  
+}
+
+/**
+ * 
+ */
+function _zipcart_zip_filename() {
+  $filename = 'Files from MNC.tv - '. date('Y-m-d_Hi') .'.zip' ;
+  return $filename ;
+}
+
+/**
+ *
+ */
+function _zipcart_get_destination_alias() {
+  if (isset($_REQUEST['destination'])) {
+    return 'destination='. urlencode(drupal_get_path_alias($_REQUEST['destination']));
+  }
+  else {
+    // Use $_GET here to retrieve the original path in source form.
+    $path = isset($_GET['q']) ? $_GET['q'] : '';
+    $query = drupal_query_string_encode($_GET, array('q'));
+    if ($query != '') {
+      $path .= '?'. $query;
+    }
+    return 'destination='. urlencode(drupal_get_path_alias($path));
+  }
+}
+
+/**
+ * Theme function to generate a download link.
+ */
+function theme_zipcart_download($text, $path, $options=array()) {
+  $default_options = array(
+    'attributes' => array( 
+      'class' => 'zipcart',
+    ),
+  ) ;
+  $options = array_merge($options, $default_options);
+//  dpm(array($text, $path, $options));
+  return l($text, ZIPCART_PATH_ADD .'/'. $path, $options);
+}
