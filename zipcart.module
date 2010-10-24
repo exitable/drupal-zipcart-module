@@ -199,7 +199,7 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
   }
   else {
     if ( $success ) {
-      drupal_set_message(t('The file !filename has been added to your cart.', array('!filename' => $filename)));
+      drupal_set_message(t('The file %filename has been added to your cart. !download', array('%filename' => $filename, '!download' => l('Click here to download', 'zipcart/get'))));
     }
     else {
       drupal_set_message(t('The file !filename could not be added to your cart.', array('!filename' => $filename)));    

@@ -34,3 +34,6 @@ and the download clicks will be interrupted. The block will also be updated with
 number of files for download. This JS is dependent on certain CSS classes being present,
 and you may want to ensure the ZipCart Downloads block is always visible on screen, or 
 is fixed on screen if there are files to download.
+
+If JS is not present or enabled, the module should continue to work as per normal, with
+a message displayed to the user as each file is added to the cart.
