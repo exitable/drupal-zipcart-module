@@ -24,6 +24,7 @@ There are two steps to using this module.
 * You need to expose the "ZipCart Downloads" block via admin/build/block/list
   This block provides the link for users to build the zip with their files and download it.
 
+* Configure permissions for roles to access ZipCart downloads at admin/user/permissions
 
 JAVASCRIPT ENHANCEMENTS
 

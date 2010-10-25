@@ -20,6 +20,7 @@ function zipcart_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array( 'zipcart_settings_form' ),
     'title' => 'ZipCart',
+    'description' => 'Configure Zip settings for ZipCart',
     'access arguments' => array( 'administer site configuration' ),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'zipcart.admin.inc',
