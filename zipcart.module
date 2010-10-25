@@ -127,6 +127,7 @@ function zipcart_zipmethods() {
     'title'    => 'PHP Zip extension',
     'callback' => '_zipcart_phpzip',
   ) ;
+/*
   $methods['zip_pecl'] = array(
     'title'    => 'PECL Zip',
     'callback' => '_zipcart_peclzip',
@@ -135,6 +136,7 @@ function zipcart_zipmethods() {
     'title'    => 'External Zip binary',
     'callback' => '_zipcart_zipbinary',
   ) ;
+*/
   return $methods;
 }
 
@@ -224,7 +226,7 @@ function zipcart_get_zip() {
       $zipcart_dir = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') ;
       if (file_check_directory($zipcart_dir, 1)) {
         $methods = _zipcart_get_available_methods() ;
-        $zipmethod = variable_get('zipcart_zip_method', '');
+        $zipmethod = variable_get('zipcart_zip_method', 'zip_builtin');
         if ( isset( $methods[$zipmethod] ) ) {
           $zipfunction = $methods[$zipmethod]['callback'] ;
           if ( !$zipfunction($files) ) {

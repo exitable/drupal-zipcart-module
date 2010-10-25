@@ -1,4 +1,4 @@
-ZipCart
+ZipCart - download files as a zip
 
 INTRODUCTION
 
@@ -13,17 +13,16 @@ USAGE
 
 There are two steps to using this module.
 
-1. You need to modify your download links to use ZipCart, using theme('zipcart_download')
+* Visit admin/settings/zipcart and select the appropriate Zip handler.
 
-You have a file at sites/default/files/file1.txt which should be available for download:
-
+* Update your theme with download links to ZipCart, using theme('zipcart_download').
+  This function simply wraps l(), so the parameters are similar: $html, $path, $options.
+  Eg: You have a file at sites/default/files/file1.txt to make available for download:
+  
     <?php print theme('zipcart_download', 'Download file', 'sites/default/files/file1.txt'); ?>
 
-This function simply wraps l(), so the parameters are similar: $html, $path, $options.
-
-2. You need to expose the "ZipCart Downloads" block.
-
-This block provides the link for users to download their files.
+* You need to expose the "ZipCart Downloads" block via admin/build/block/list
+  This block provides the link for users to build the zip with their files and download it.
 
 
 JAVASCRIPT ENHANCEMENTS
