@@ -63,7 +63,10 @@ function zipcart_theme($existing, $type, $theme, $path) {
   return array(
     'zipcart_block_downloads' => array(
       'template' => 'zipcart-block-downloads',
-      'arguments' => array(),
+      'arguments' => array(
+        'count' => ( !empty($_SESSION['zipcart']['files']) ) ? sizeof($_SESSION['zipcart']['files']) : 0,
+        'files' => ( !empty($_SESSION['zipcart']['files']) ) ? $_SESSION['zipcart']['files'] : NULL,
+      ),
     ),
     'zipcart_download' => array(
       'arguments' => array(
