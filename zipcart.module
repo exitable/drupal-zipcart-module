@@ -274,8 +274,9 @@ function zipcart_filterzip(&$files) {
  */
 function _zipcart_phpzip($files) {
   $zip = new ZipArchive;
-  $filename = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') .'/'. time() .'.zip' ;
-  $zip_open = $zip->open($filename, ZIPARCHIVE::CREATE) ;
+  $filename = tempnam(file_directory_temp(), 'zip');
+//  $filename = file_directory_path() .'/'. variable_get('zipcart_cache','zipcart') .'/'. time() .'.zip' ;
+  $zip_open = $zip->open($filename, ZIPARCHIVE::OVERWRITE) ;
   if ($zip_open === TRUE) {
     // would be nice to handle duplicate filenames here
     foreach ( $files as $file ) {
@@ -298,6 +299,7 @@ function _zipcart_phpzip($files) {
       // files out of the session. However, if we do that, the user can't add new files to their
       // cart until the zip is downloaded. So we'll do this first.
       $_SESSION['zipcart']['files'] = array();
+      register_shutdown_function('_zipcart_remove_zip', $filename);
       file_transfer($filename, $headers);
     }
   }
@@ -349,3 +351,11 @@ function theme_zipcart_download($text, $path, $options=array()) {
 //  dpm(array($text, $path, $options));
   return l($text, ZIPCART_PATH_ADD .'/'. $path, $options);
 }
+
+/**
+ * Clean up built zips as required.
+ */
+function _zipcart_remove_zip($filename) {
+  unlink($filename);
+}
+        
