@@ -261,8 +261,8 @@ function zipcart_filterzip(&$files) {
   // $add = array( 'sites/default/files/README.txt' ) ;
   foreach ( $files as $i => &$file ) {
     if ( !file_check_location($file, file_directory_path()) ) { 
-      watchdog('zipcart', t('forbidding download of !file', 
-                              array('!file' => $file)));      
+      watchdog('zipcart', t('Forbidding download of !file', 
+                            array('!file' => $file)));      
       unset($files[$i]);
     }
   }

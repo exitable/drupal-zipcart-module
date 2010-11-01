@@ -32,28 +32,38 @@ Drupal.zipcart = {
       'dataType': 'json',
       success: function(data, textStatus, req) {
         Drupal.settings.zipcart.cart = data.cart ;
-        slide = $(e.target).clone();
         cart = $('.zipcart-block-downloads');
-        // generate a slide-able copy of whatever was clicked.
-        // it would be really nice if this could be attached to 
-        // a related image, eg thumbnail version of the photo
-        // instead of the 'download' link text ...
-        slide.hide();
-        slide.css({ position: 'absolute', top: $(e.target).offset().top, left: $(e.target).offset().left, opacity: 0.75 });
-        slide.appendTo($('body'));
-        slide.show();
+        // copy the element for animation - with thanks to jQuery 'fake' plugin by Carl Fürstenberg
+        orig_offset = $(a).offset();
+        orig_height = $(a).height();
+        orig_width  = $(a).width();
+        clone = $(a).clone();
+        // prevent this element catching any events on the way across the screen
+        possEvents = "blur focus focusin focusout load resize scroll unload click dblclick "  +
+          "mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
+          "change select submit keydown keypress keyup error";
+        clone.bind( possEvents, function(event) { event.preventDefault(); } );
+        clone.addClass('clone');
+        clone.css({
+          position: 'absolute',
+          visibility: 'visible',
+          left: orig_offset.left,
+          top: orig_offset.top,
+          width: orig_width,
+          height: orig_height
+        });
+        clone.appendTo($('body'));
         animProps = {
-          position: 'absolute', 
-          top:  cart.offset().top  + ( ( $(cart).height() - $(e.target).height()/2 ) / 2 ), 
-          left: cart.offset().left + ( ( $(cart).width()  - $(e.target).width()/2  ) / 2 ), 
-          width: $(slide).width()/2, 
-          height: $(slide).height/2 
+          top:  parseInt(cart.offset().top  + ( ( $(cart).height() - clone.height()/2 ) / 2 )), 
+          left: parseInt(cart.offset().left + ( ( $(cart).width()  - clone.width()/2  ) / 2 )), 
+          width: orig_width/2, 
+          height: orig_height/2 
         };
         animCallback = function(data) {
-          $(slide).hide() ;
+          clone.fadeOut().remove() ;
           $('.zipcart-download-count').html( Drupal.settings.zipcart.cart.length ) ;
         }
-        slide.animate(animProps, 'slow', 'swing', animCallback);
+        clone.animate(animProps, 'slow', 'swing', animCallback);
       },
       error: function(req, textStatus, errorThrown) {
         alert('Unable to add the file to your ZipCart.');
@@ -70,7 +80,7 @@ Drupal.zipcart = {
             break ;
         }
         // probably not permitted - handle file access restriction here
-      },
+      }
     });  
   }
   
