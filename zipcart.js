@@ -67,15 +67,18 @@ Drupal.zipcart = {
       },
       error: function(req, textStatus, errorThrown) {
         alert('Unable to add the file to your ZipCart.');
+/*
         console.log(req);
         console.log(textStatus);
         console.log(errorThrown);
+*/
         switch ( textStatus ) {
           case 'timeout' :
           case 'null' :
           case 'error' :
           case 'parsererror' :
           case 'notmodified' :
+            break ;
           default :
             break ;
         }
