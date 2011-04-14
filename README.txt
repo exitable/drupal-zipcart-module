@@ -9,6 +9,11 @@ want to give users the capacity to select several files for download, then downl
 in a single archive.
 
 
+DEMO
+
+Take a look at http://zipcart.demo.giantrobot.co.nz/ to get an idea of how this works.
+
+
 USAGE
 
 There are two steps to using this module.
