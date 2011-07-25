@@ -64,8 +64,8 @@ function zipcart_theme($existing, $type, $theme, $path) {
     'zipcart_block_downloads' => array(
       'template' => 'zipcart-block-downloads',
       'arguments' => array(
-        'count' => ( !empty($_SESSION['zipcart']['files']) ) ? sizeof($_SESSION['zipcart']['files']) : 0,
-        'files' => ( !empty($_SESSION['zipcart']['files']) ) ? $_SESSION['zipcart']['files'] : NULL,
+        'count' => 0,
+        'files' => NULL,
       ),
     ),
     'zipcart_download' => array(
@@ -104,7 +104,7 @@ function zipcart_block($op='list', $delta=0, $edit=array()) {
           case '0':
             $block = array(
               'subject' => t('My Downloads'),
-              'content' => theme('zipcart_block_downloads'),
+              'content' => zipcart_block_content(),
             );
             return $block ;
         }
@@ -114,6 +114,13 @@ function zipcart_block($op='list', $delta=0, $edit=array()) {
       return ;
     
   }
+}
+
+function zipcart_block_content() {
+  return theme('zipcart_block_downloads',
+               (!empty($_SESSION['zipcart']['files'])) ? count($_SESSION['zipcart']['files']) : 0,
+               (!empty($_SESSION['zipcart']['files'])) ? $_SESSION['zipcart']['files'] : NULL
+         );
 }
 
 /**
