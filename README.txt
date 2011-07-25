@@ -12,6 +12,8 @@ in a single archive.
 DEMO
 
 Take a look at http://zipcart.demo.giantrobot.co.nz/ to get an idea of how this works.
+This site is running ZipCart 6.x-1.x and implements the bare module - no theme or JS 
+enhancements.
 
 
 USAGE
@@ -31,6 +33,7 @@ There are two steps to using this module.
 
 * Configure permissions for roles to access ZipCart downloads at admin/user/permissions
 
+
 JAVASCRIPT ENHANCEMENTS
 
 This module includes JavaScript to improve user experience. If JS is enabled, the user 
@@ -42,3 +45,5 @@ is fixed on screen if there are files to download.
 
 If JS is not present or enabled, the module should continue to work as per normal, with
 a message displayed to the user as each file is added to the cart.
+
+
