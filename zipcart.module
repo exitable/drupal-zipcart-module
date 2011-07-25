@@ -259,7 +259,7 @@ function zipcart_get_zip() {
  * You can add files.
  * You can filter files.
  */
-function zipcart_filterzip(&$files) {
+function zipcart_filterzip($files) {
   // don't ever share these files
   // $excluded = array( 'sites/.*settings.*php' ) ;
   // only ever include these files 
