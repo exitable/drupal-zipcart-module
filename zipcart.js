@@ -1,7 +1,7 @@
 Drupal.zipcart = {
 
   init: function() {
-    $('a.zipcart').click( Drupal.zipcart.addToCart ) ;
+    $('a.zipcart').click( Drupal.zipcart.addToCart );
   },
 
   addToCart: function(e) {
@@ -9,29 +9,29 @@ Drupal.zipcart = {
     // this next wants cleanup (and possibly using 'is' instead of the below)
     // basically: get me the clicked 'a', or the parent 'a'.
     if ( e.target.tagName.toLowerCase() == 'a' ) {
-      a = e.target ;
+      a = e.target;
     }
     else {
       if ( a = $(e.target).parents('a[href]') ) {
         // found parent a
       }
       else {
-        return ;
+        return;
       }
     }
     
     e.preventDefault();
     // add AJAX parameter
-    filePath = $(a).attr('href').replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax) ;
+    filePath = $(a).attr('href').replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax);
     // add Drupal basePath
-    filePath = Drupal.settings.basePath + filePath ;
+    filePath = Drupal.settings.basePath + filePath;
     // remove multiple slashes at start
     filePath = filePath.replace(/^\/+/, '/');
     $.ajax({
       'url': filePath,
       'dataType': 'json',
       success: function(data, textStatus, req) {
-        Drupal.settings.zipcart.cart = data.cart ;
+        Drupal.settings.zipcart.cart = data.cart;
         cart = $('.zipcart-block-downloads');
         // copy the element for animation - with thanks to jQuery 'fake' plugin by Carl Fürstenberg
         orig_offset = $(a).offset();
@@ -60,8 +60,8 @@ Drupal.zipcart = {
           height: orig_height/2 
         };
         animCallback = function(data) {
-          clone.fadeOut().remove() ;
-          $('.zipcart-download-count').html( Drupal.settings.zipcart.cart.length ) ;
+          clone.fadeOut().remove();
+          $('.zipcart-download-count').html( Drupal.settings.zipcart.cart.length );
         }
         clone.animate(animProps, 'slow', 'swing', animCallback);
       },
@@ -78,15 +78,15 @@ Drupal.zipcart = {
           case 'error' :
           case 'parsererror' :
           case 'notmodified' :
-            break ;
+            break;
           default :
-            break ;
+            break;
         }
         // probably not permitted - handle file access restriction here
       }
     });  
   }
   
-} ;
+};
 
-Drupal.behaviors.zipcart = Drupal.zipcart.init ;
+Drupal.behaviors.zipcart = Drupal.zipcart.init;
