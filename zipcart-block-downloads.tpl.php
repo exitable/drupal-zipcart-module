@@ -1,6 +1,7 @@
 <?php
 /**
- * Template to display My Downloads link.
+ * @file
+ * Template to display ZipCart Downloads block content.
  *
  * $count - number of files in cart currently
  * $files - the files

@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * ZipCart admin pages.
+ */
+
+/**
  * Settings form
  */
 function zipcart_settings_form() {
@@ -23,7 +28,7 @@ function zipcart_settings_form() {
     '#description' => t('Directory to build files in, relative to !dir.', array('!dir' => file_directory_path())),
   );
 
-  $items['zip_builtin'] = array( 
+  $items['zip_builtin'] = array(
     '#type' => 'fieldset',
     '#title' => 'PHP Zip settings',
   );
