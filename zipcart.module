@@ -227,7 +227,7 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
  */
 function zipcart_get_zip() {
   if ( empty( $_SESSION['zipcart']['files'] ) ) {
-    drupal_set_message('Sorry, there are no files queued for you to download.');
+    drupal_set_message(t('Sorry, there are no files queued for you to download.'));
     drupal_goto();
   }
   else {
@@ -245,7 +245,7 @@ function zipcart_get_zip() {
             return 'Download failed.';
           }
           else {
-            drupal_set_message('Zip downloaded');
+            drupal_set_message(t('Zip downloaded.'));
             return TRUE;
           }
         }
