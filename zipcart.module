@@ -311,12 +311,14 @@ function _zipcart_phpzip($files) {
     // remove any content-disposition headers here
     if (count($headers)) {
       foreach ( $headers as $k => $header ) {
-        if ( stristr($header, 'Content-Disposition:') === 0 ) {
+        if (stristr($header, 'Content-Disposition:') === 0 || stristr($header, 'Content-Type:') === 0) {
           unset($headers[$k]);
         }
       }
     }
-    $headers[] = 'Content-Disposition: attachment; filename="'. _zipcart_zip_filename() .'"';
+    $zip_filename = _zipcart_zip_filename();
+    $headers[] = 'Content-Type: ' . file_get_mimetype($zip_filename);
+    $headers[] = 'Content-Disposition: attachment; filename="'. $zip_filename .'"';
     // FIXME: it would be nice to wait until the file transfer completes before we clear the
     // files out of the session. However, if we do that, the user can't add new files to their
     // cart until the zip is downloaded. So we'll do this first.
