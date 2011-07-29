@@ -1,25 +1,25 @@
 Drupal.zipcart = {
 
   init: function() {
-    $('a.zipcart').click( Drupal.zipcart.addToCart );
+    $('a.zipcart').click(Drupal.zipcart.addToCart);
   },
 
   addToCart: function(e) {
 
     // this next wants cleanup (and possibly using 'is' instead of the below)
     // basically: get me the clicked 'a', or the parent 'a'.
-    if ( e.target.tagName.toLowerCase() == 'a' ) {
+    if (e.target.tagName.toLowerCase() == 'a') {
       a = e.target;
     }
     else {
-      if ( a = $(e.target).parents('a[href]') ) {
+      if (a = $(e.target).parents('a[href]')) {
         // found parent a
       }
       else {
         return;
       }
     }
-    
+
     e.preventDefault();
     // add AJAX parameter
     filePath = $(a).attr('href').replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax);
@@ -42,7 +42,7 @@ Drupal.zipcart = {
         possEvents = "blur focus focusin focusout load resize scroll unload click dblclick "  +
           "mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
           "change select submit keydown keypress keyup error";
-        clone.bind( possEvents, function(event) { event.preventDefault(); } );
+        clone.bind(possEvents, function(event) { event.preventDefault(); });
         clone.addClass('clone');
         clone.css({
           position: 'absolute',
@@ -54,25 +54,25 @@ Drupal.zipcart = {
         });
         clone.appendTo($('body'));
         animProps = {
-          top:  parseInt(cart.offset().top  + ( ( $(cart).height() - clone.height()/2 ) / 2 )), 
-          left: parseInt(cart.offset().left + ( ( $(cart).width()  - clone.width()/2  ) / 2 )), 
-          width: orig_width/2, 
-          height: orig_height/2 
+          top:  parseInt(cart.offset().top + (($(cart).height() - clone.height()/2) / 2)),
+          left: parseInt(cart.offset().left + (($(cart).width() - clone.width()/2) / 2)),
+          width: orig_width/2,
+          height: orig_height/2
         };
         animCallback = function(data) {
           clone.fadeOut().remove();
-          $('.zipcart-download-count').html( Drupal.settings.zipcart.cart.length );
+          $('.zipcart-download-count').html(Drupal.settings.zipcart.cart.length);
         }
         clone.animate(animProps, 'slow', 'swing', animCallback);
       },
       error: function(req, textStatus, errorThrown) {
-        alert('Unable to add the file to your ZipCart.');
+        alert(Drupal.t('Unable to add the file to your ZipCart.');
 /*
         console.log(req);
         console.log(textStatus);
         console.log(errorThrown);
 */
-        switch ( textStatus ) {
+        switch (textStatus) {
           case 'timeout' :
           case 'null' :
           case 'error' :
@@ -84,9 +84,9 @@ Drupal.zipcart = {
         }
         // probably not permitted - handle file access restriction here
       }
-    });  
+    });
   }
-  
+
 };
 
 Drupal.behaviors.zipcart = Drupal.zipcart.init;
