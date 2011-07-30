@@ -49,14 +49,6 @@ function zipcart_menu() {
 }
 
 /**
- * Implementation of hook_init().
- */
-function zipcart_init() {
-  drupal_add_js(drupal_get_path('module', 'zipcart') . '/zipcart.js');
-  drupal_add_js(array('zipcart' => array('path_add' => ZIPCART_PATH_ADD, 'path_add_ajax' => ZIPCART_PATH_ADD .'/AJAX')), 'setting');
-}
-
-/**
  * Implementation of hook_theme().
  */
 function zipcart_theme($existing, $type, $theme, $path) {
@@ -382,3 +374,12 @@ function _zipcart_remove_zip($filename) {
   unlink($filename);
 }
 
+/**
+ * Preprocess zipcart_block_downloads().
+ */
+function zipcart_preprocess_zipcart_block_downloads(&$variables) {
+  drupal_add_js(drupal_get_path('module', 'zipcart') . '/zipcart.js');
+  drupal_add_js(array('zipcart' => array('path_add' => ZIPCART_PATH_ADD, 'path_add_ajax' => ZIPCART_PATH_ADD .'/AJAX')), 'setting');
+  $variables['count'] = (!empty($_SESSION['zipcart']['files'])) ? sizeof($_SESSION['zipcart']['files']) : 0;
+  $variables['files'] = (!empty($_SESSION['zipcart']['files'])) ? $_SESSION['zipcart']['files'] : NULL;
+}
