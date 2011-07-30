@@ -21,13 +21,7 @@ function zipcart_settings_form() {
     '#description' => t('Method used to generate bundle files.'),
   );
 
-  $form['zipcart_zip_dir'] = array(
-    '#title' => t('Zip Cache Directory'),
-    '#type' => 'textfield',
-    '#default_value' => variable_get('zipcart_cache', 'zipcart'),
-    '#description' => t('Directory to build files in, relative to !dir.', array('!dir' => file_directory_path())),
-  );
-
+/*
   $items['zip_builtin'] = array(
     '#type' => 'fieldset',
     '#title' => 'PHP Zip settings',
@@ -42,6 +36,7 @@ function zipcart_settings_form() {
     '#type' => 'fieldset',
     '#title' => 'External Zip binary settings',
   );
+*/
 
   return system_settings_form($form);
 }
