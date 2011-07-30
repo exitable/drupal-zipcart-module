@@ -20,7 +20,7 @@ USAGE
 
 There are two steps to using this module.
 
-* Visit admin/settings/zipcart and select the appropriate Zip handler.
+* Visit admin/config/media/zipcart and select the appropriate Zip handler.
 
 * Update your theme with download links to ZipCart, using theme('zipcart_download').
   This function simply wraps l(), so the parameters are similar: $html, $path, $options.
@@ -28,10 +28,10 @@ There are two steps to using this module.
   
     <?php print theme('zipcart_download', 'Download file', 'sites/default/files/file1.txt'); ?>
 
-* You need to expose the "ZipCart Downloads" block via admin/build/block/list
+* You need to expose the "ZipCart Downloads" block via admin/structure/block
   This block provides the link for users to build the zip with their files and download it.
 
-* Configure permissions for roles to access ZipCart downloads at admin/user/permissions
+* Configure permissions for roles to access ZipCart downloads at admin/people/permissions
 
 
 JAVASCRIPT ENHANCEMENTS
