@@ -66,7 +66,7 @@ Drupal.zipcart = {
         clone.animate(animProps, 'slow', 'swing', animCallback);
       },
       error: function(req, textStatus, errorThrown) {
-        alert(Drupal.t('Unable to add the file to your ZipCart.');
+	alert(Drupal.t('Unable to add the file to your ZipCart.'));
 /*
         console.log(req);
         console.log(textStatus);
