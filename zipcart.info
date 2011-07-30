@@ -1,6 +1,5 @@
-core = "6.x"
-description = "Allow users to add files to a cart, then download them as a zip."
 name = "ZipCart"
+description = "Allow users to add files to a cart, then download them as a zip."
 package = "Other"
 project = "zipcart"
-; dependencies[] = "jquery_update"
+core = "6.x"
