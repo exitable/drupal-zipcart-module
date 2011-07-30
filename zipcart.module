@@ -117,13 +117,6 @@ function zipcart_block_content() {
 }
 
 /**
- * Implementation of hook_file_download().
- */
-function zipcart_file_download($filepath) {
-  // dpm($filepath);
-}
-
-/**
  * Implementation of hook_zipmethods().
  */
 function zipcart_zipmethods() {
@@ -192,9 +185,6 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
     }
   }
 
-//  dpm($files);
-//  dpm(array($success), 'success');
-
   $_SESSION['zipcart']['files'] = array_unique($_SESSION['zipcart']['files']);
   $result = array(
     'cart' => $_SESSION['zipcart']['files'],
@@ -259,8 +249,8 @@ function zipcart_filterzip($files) {
   // $included = array( 'sites/files/.*' );
   // always include a certain file
   // $add = array( 'sites/default/files/README.txt' );
-  foreach ( $files as $i => &$file ) {
-    if ( !file_check_location($file, file_directory_path()) ) {
+  foreach ($files as $i => &$file) {
+    if (!file_check_location($file, file_directory_path())) {
       watchdog('zipcart', t('Forbidding download of !file',
                             array('!file' => $file)));
       unset($files[$i]);
@@ -362,8 +352,6 @@ function theme_zipcart_download($text, $path, $options=array()) {
     'query' => _zipcart_get_destination_alias(),
   );
   $options = array_merge($default_options, $options);
-//  dpm($options);
-//  dpm(array($text, $path, $options));
   return l($text, ZIPCART_PATH_ADD .'/'. $path, $options);
 }
 
