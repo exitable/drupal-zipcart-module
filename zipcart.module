@@ -30,20 +30,20 @@ function zipcart_menu() {
     'page arguments' => array( FALSE ),
     'title' => 'Add file to Download Cart',
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
+    'access arguments' => array('access zipcart downloads'),
   );
   $items[ZIPCART_PATH_ADD .'/AJAX'] = array(
     'page callback' => 'zipcart_add_file_to_cart',
     'page arguments' => array( TRUE ),
     'title' => 'Add file to Download Cart',
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
+    'access arguments' => array('access zipcart downloads'),
   );
   $items['zipcart/get'] = array(
     'page callback' => 'zipcart_get_zip',
     'title' => 'Download Cart Files',
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
+    'access arguments' => array('access zipcart downloads'),
   );
   return $items;
 }
