@@ -262,7 +262,19 @@ function zipcart_filterzip($files) {
                             array('!file' => $file)));
       unset($files[$i]);
     }
-  }  
+
+    // reject external URIs
+    $localpath = drupal_realpath($file);
+    if ($localpath){
+       $file = $localpath;
+    }
+    else {
+      watchdog('zipcart', t('External file cannot be added to zip. !file',
+                          array('!file' => $file)));
+      unset($files[$i]);
+    }
+
+  }
   return $files;
 }
 
