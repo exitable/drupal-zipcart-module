@@ -133,7 +133,7 @@ function zipcart_zipmethods() {
 }
 
 /**
- * Return an array of zip methods
+ * Return an array of zip methods.
  */
 function _zipcart_get_available_methods() {
   foreach (module_implements('zipmethods') as $module) {
@@ -150,14 +150,15 @@ function _zipcart_get_available_methods() {
 }
 
 /**
- * Add a file path to a user's $_SESSION. Check the user has permission to access the file here,
- * so we can warn if they do not.
+ * Add a file path to a user's $_SESSION.
+ *
+ * Check the user has permission to access the file here, warn if they do not.
  */
 function zipcart_add_file_to_cart($ajax = FALSE) {
   $path_parts = func_get_args();
   // Remove AJAX flag.
   array_shift($path_parts);
-  // FIXME: we can't add the file 'sites/default/files/AJAX/myfile.txt' to our cart (?)
+  // We can't add the file 'sites/default/files/AJAX/myfile.txt' to our cart.
   $path       = implode('/', $path_parts);
   $path       = str_replace(ZIPCART_PATH_ADD, '', $path);
   $path       = trim($path, '/');
@@ -187,7 +188,11 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
   }
   else {
     if ($success) {
-      drupal_set_message(t('The file %filename has been added to your cart. !download', array('%filename' => check_plain($filename), '!download' => l(t('Click here to download'), 'zipcart/get'))));
+      $targs = array(
+        '%filename' => check_plain($filename),
+        '!download' => l(t('Click here to download'), 'zipcart/get'),
+      );
+      drupal_set_message(t('The file %filename has been added to your cart. !download', $targs));
     }
     else {
       drupal_set_message(t('The file !filename could not be added to your cart.', array('!filename' => check_plain($filename))));
@@ -197,7 +202,7 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
 }
 
 /**
- * Get the files as a zip
+ * Get the files as a zip.
  */
 function zipcart_get_zip() {
   if (empty($_SESSION['zipcart']['files'])) {
@@ -249,7 +254,7 @@ function zipcart_filterzip($files) {
     // Reject external URIs.
     $localpath = drupal_realpath($file);
     if ($localpath) {
-       $file = $localpath;
+      $file = $localpath;
     }
     else {
       watchdog('zipcart', 'External file cannot be added to zip. !file',
@@ -262,7 +267,7 @@ function zipcart_filterzip($files) {
 }
 
 /**
- * Zip callback: PHP zip extension
+ * Zip callback: PHP zip extension.
  */
 function _zipcart_phpzip($files) {
   $zip = new ZipArchive();
