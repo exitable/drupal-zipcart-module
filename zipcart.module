@@ -1,12 +1,8 @@
 <?php
 
 /**
- * TODO:
- *
- * prevent access outside files dir
- *
- * limit number of files in zip
- * limit size of zip
+ * @file
+ * Drupal module for downloading groups of files.
  */
 
 define('ZIPCART_PATH_ADD', 'zipcart/add');
@@ -18,23 +14,23 @@ define('ZIPCART_PATH_GET', 'zipcart/get');
 function zipcart_menu() {
   $items['admin/config/media/zipcart'] = array(
     'page callback' => 'drupal_get_form',
-    'page arguments' => array( 'zipcart_settings_form' ),
+    'page arguments' => array('zipcart_settings_form'),
     'title' => 'ZipCart',
     'description' => 'Configure settings for ZipCart',
-    'access arguments' => array( 'administer site configuration' ),
+    'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'zipcart.admin.inc',
   );
   $items[ZIPCART_PATH_ADD] = array(
     'page callback' => 'zipcart_add_file_to_cart',
-    'page arguments' => array( FALSE ),
+    'page arguments' => array(FALSE),
     'title' => 'Add file to Download Cart',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access zipcart downloads'),
   );
-  $items[ZIPCART_PATH_ADD .'/AJAX'] = array(
+  $items[ZIPCART_PATH_ADD . '/AJAX'] = array(
     'page callback' => 'zipcart_add_file_to_cart',
-    'page arguments' => array( TRUE ),
+    'page arguments' => array(TRUE),
     'title' => 'Add file to Download Cart',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access zipcart downloads'),
@@ -133,16 +129,6 @@ function zipcart_zipmethods() {
     'title'    => 'PHP Zip extension',
     'callback' => '_zipcart_phpzip',
   );
-/*
-  $methods['zip_pecl'] = array(
-    'title'    => 'PECL Zip',
-    'callback' => '_zipcart_peclzip',
-  );
-  $methods['zip_external'] = array(
-    'title'    => 'External Zip binary',
-    'callback' => '_zipcart_zipbinary',
-  );
- */
   return $methods;
 }
 
@@ -151,7 +137,7 @@ function zipcart_zipmethods() {
  */
 function _zipcart_get_available_methods() {
   foreach (module_implements('zipmethods') as $module) {
-    $function = $module .'_zipmethods';
+    $function = $module . '_zipmethods';
     if ($methods = $function()) {
       if (is_array($methods)) {
         foreach ($methods as $key => $method) {
@@ -163,17 +149,14 @@ function _zipcart_get_available_methods() {
   return $avail_methods;
 }
 
-function zipcart_form_alter(&$form, &$form_state, $form_id) {
-
-}
-
 /**
  * Add a file path to a user's $_SESSION. Check the user has permission to access the file here,
  * so we can warn if they do not.
  */
 function zipcart_add_file_to_cart($ajax = FALSE) {
   $path_parts = func_get_args();
-  array_shift($path_parts); // remove ajax flag
+  // Remove AJAX flag.
+  array_shift($path_parts);
   // FIXME: we can't add the file 'sites/default/files/AJAX/myfile.txt' to our cart (?)
   $path       = implode('/', $path_parts);
   $path       = str_replace(ZIPCART_PATH_ADD, '', $path);
@@ -184,11 +167,11 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
 
   $headers = module_invoke_all('file_download', $path);
   if (!in_array(-1, $headers)) {
-    // ok, hook_file_download didn't object
-    $files = array( $path );
+    // OK, hook_file_download didn't object.
+    $files = array($path);
     $files = module_invoke_all('filterzip', $files);
 
-    if ( !empty( $files ) ) {
+    if (!empty($files)) {
       $_SESSION['zipcart']['files'][] = $path;
       $success = TRUE;
     }
@@ -199,12 +182,12 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
     'cart' => $_SESSION['zipcart']['files'],
     'result' => $success,
   );
-  if ( $ajax ) {
+  if ($ajax) {
     drupal_json_output($result);
   }
   else {
-    if ( $success ) {
-      drupal_set_message(t('The file %filename has been added to your cart. !download', array('%filename' => check_plain($filename), '!download' => l('Click here to download', 'zipcart/get'))));
+    if ($success) {
+      drupal_set_message(t('The file %filename has been added to your cart. !download', array('%filename' => check_plain($filename), '!download' => l(t('Click here to download'), 'zipcart/get'))));
     }
     else {
       drupal_set_message(t('The file !filename could not be added to your cart.', array('!filename' => check_plain($filename))));
@@ -217,7 +200,7 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
  * Get the files as a zip
  */
 function zipcart_get_zip() {
-  if ( empty( $_SESSION['zipcart']['files'] ) ) {
+  if (empty($_SESSION['zipcart']['files'])) {
     drupal_set_message(t('Sorry, there are no files queued for you to download.'));
     drupal_goto();
   }
@@ -230,7 +213,7 @@ function zipcart_get_zip() {
       $zipmethod = variable_get('zipcart_zip_method', 'zip_builtin');
       if (isset($methods[$zipmethod])) {
         $zipfunction = $methods[$zipmethod]['callback'];
-        if ( !$zipfunction($files) ) {
+        if (!$zipfunction($files)) {
           return 'Download failed.';
         }
         else {
@@ -245,32 +228,32 @@ function zipcart_get_zip() {
 /**
  * Preprocess the list of files.
  *
- * You can add files.
- * You can filter files.
+ * Don't ever share these files:
+ *   $excluded = array( 'sites/.*settings.*php' );
+ *
+ * Only ever include these files:
+ *   $included = array( 'sites/files/.*' );
+ *
+ * Always include a certain file:
+ *   $add = array( 'sites/default/files/README.txt' );
  */
 function zipcart_filterzip($files) {
-  // don't ever share these files
-  // $excluded = array( 'sites/.*settings.*php' );
-  // only ever include these files
-  // $included = array( 'sites/files/.*' );
-  // always include a certain file
-  // $add = array( 'sites/default/files/README.txt' );
   $directory = drupal_realpath(file_default_scheme() . '://');
   foreach ($files as $i => &$file) {
     if (strpos(drupal_realpath($file), $directory) !== 0) {
-      watchdog('zipcart', t('Forbidding download of !file',
-                            array('!file' => $file)));
+      watchdog('zipcart', 'Forbidding download of !file',
+                            array('!file' => $file), WATCHDOG_NOTICE);
       unset($files[$i]);
     }
 
-    // reject external URIs
+    // Reject external URIs.
     $localpath = drupal_realpath($file);
-    if ($localpath){
+    if ($localpath) {
        $file = $localpath;
     }
     else {
-      watchdog('zipcart', t('External file cannot be added to zip. !file',
-                          array('!file' => $file)));
+      watchdog('zipcart', 'External file cannot be added to zip. !file',
+                          array('!file' => $file), WATCHDOG_NOTICE);
       unset($files[$i]);
     }
 
@@ -282,15 +265,15 @@ function zipcart_filterzip($files) {
  * Zip callback: PHP zip extension
  */
 function _zipcart_phpzip($files) {
-  $zip = new ZipArchive;
-  // we build the file in $filename, but file_transfer will
-  // only deliver it via a registered Drupal stream ,,,
+  $zip = new ZipArchive();
+  // We build the file in $filename, but file_transfer will
+  // only deliver it via a registered Drupal stream.
   $filename = drupal_tempnam(file_directory_temp(), 'zipcart');
   $transfer_filename = 'temporary://' . basename($filename);
   $zip_open = $zip->open($filename, ZIPARCHIVE::CREATE | ZIPARCHIVE::OVERWRITE);
   if ($zip_open === TRUE) {
     $zip->setArchiveComment('Generated by ZipCart for Drupal.');
-    // http://drupal.org/node/1234282 - duplicate filenames
+    // http://drupal.org/node/1234282 - duplicate filenames.
     foreach ($files as $file) {
       if (file_exists($file)) {
         if ($zip->addFile($file, basename($file))) {
@@ -316,10 +299,11 @@ function _zipcart_phpzip($files) {
     }
     $zip_filename = _zipcart_zip_filename();
     $headers['Content-Type'] = file_get_mimetype($zip_filename);
-    $headers['Content-Disposition'] = 'attachment; filename="'. $zip_filename .'"';
-    // FIXME: it would be nice to wait until the file transfer completes before we clear the
-    // files out of the session. However, if we do that, the user can't add new files to their
-    // cart until the zip is downloaded. So we'll do this first.
+    $headers['Content-Disposition'] = 'attachment; filename="' . $zip_filename . '"';
+    // FIXME: it would be nice to wait until the file transfer completes before
+    // we clear the files out of the session. However, if we do that, the user
+    // can't add new files to their cart until the zip is downloaded. So we'll
+    // do this first.
     $_SESSION['zipcart']['files'] = array();
     drupal_register_shutdown_function('_zipcart_remove_zip', $filename);
     if (!file_transfer($transfer_filename, $headers)) {
@@ -335,15 +319,15 @@ function _zipcart_phpzip($files) {
 }
 
 /**
- *
+ * Generate a suitable filename for the zip.
  */
 function _zipcart_zip_filename() {
-  $filename = 'Files - '. date('Y-m-d_Hi') .'.zip';
+  $filename = 'Files - ' . date('Y-m-d_Hi') . '.zip';
   return $filename;
 }
 
 /**
- *
+ * Obtain correct path to return user to after adding file to cart.
  */
 function _zipcart_get_destination_alias() {
   if (isset($_REQUEST['destination'])) {
@@ -372,21 +356,24 @@ function theme_zipcart_download($vars = array()) {
     'query' => _zipcart_get_destination_alias(),
   );
   $options = array_merge($default_options, $options);
-//  dpm($options);
-//  dpm(array($text, $path, $options));
-  return l($text, ZIPCART_PATH_ADD .'/'. $path, $options);
+  return l($text, ZIPCART_PATH_ADD . '/' . $path, $options);
 }
 
 /**
  * Clean up built zips as required.
+ *
+ * @TODO Remove?
  */
 function _zipcart_remove_zip($filename) {
   drupal_unlink($filename);
 }
 
+/**
+ * Theme preprocess function.
+ */
 function zipcart_preprocess_zipcart_block_downloads(&$variables) {
   drupal_add_js(drupal_get_path('module', 'zipcart') . '/zipcart.js');
-  drupal_add_js(array('zipcart' => array('path_add' => ZIPCART_PATH_ADD, 'path_add_ajax' => ZIPCART_PATH_ADD .'/AJAX')), 'setting');
+  drupal_add_js(array('zipcart' => array('path_add' => ZIPCART_PATH_ADD, 'path_add_ajax' => ZIPCART_PATH_ADD . '/AJAX')), 'setting');
   $variables['count'] = (!empty($_SESSION['zipcart']['files'])) ? sizeof($_SESSION['zipcart']['files']) : 0;
   $variables['files'] = (!empty($_SESSION['zipcart']['files'])) ? $_SESSION['zipcart']['files'] : NULL;
 }
