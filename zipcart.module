@@ -267,6 +267,13 @@ function zipcart_filterzip($files) {
 }
 
 /**
+ * Invoke hook_zipcart_download_complete() when download completed.
+ */
+function _zipcart_download_complete($filename, $files) {
+  module_invoke_all('zipcart_download_complete', $filename, $files);
+}
+
+/**
  * Zip callback: PHP zip extension.
  */
 function _zipcart_phpzip($files) {
@@ -309,8 +316,9 @@ function _zipcart_phpzip($files) {
     // we clear the files out of the session. However, if we do that, the user
     // can't add new files to their cart until the zip is downloaded. So we'll
     // do this first.
+    $files = $_SESSION['zipcart']['files'];
     $_SESSION['zipcart']['files'] = array();
-    drupal_register_shutdown_function('_zipcart_remove_zip', $filename);
+    drupal_register_shutdown_function('_zipcart_download_complete', $filename, $files);
     if (!file_transfer($transfer_filename, $headers)) {
       watchdog('zipcart', 'Unable to transfer file from !filename.', array('!filename' => check_plain($transfer_filename)), WATCHDOG_ERROR);
       drupal_set_message(t('Unable to transfer file from !filename.', array('!filename' => check_plain($transfer_filename))), 'error');
@@ -365,11 +373,9 @@ function theme_zipcart_download($vars = array()) {
 }
 
 /**
- * Clean up built zips as required.
- *
- * @TODO Remove?
+ * Implements hook_zipcart_download_complete().
  */
-function _zipcart_remove_zip($filename) {
+function zipcart_zipcart_download_complete($filename) {
   drupal_unlink($filename);
 }
 
