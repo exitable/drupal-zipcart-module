@@ -293,8 +293,9 @@ function _zipcart_phpzip($files) {
     // we clear the files out of the session. However, if we do that, the user
     // can't add new files to their cart until the zip is downloaded. So we'll
     // do this first.
+    $files = $_SESSION['zipcart']['files'];
     $_SESSION['zipcart']['files'] = array();
-    register_shutdown_function('_zipcart_remove_zip', $filename);
+    register_shutdown_function('_zipcart_download_complete', $filename, $files);
     file_transfer($filename, $headers);
   }
   else {
@@ -302,6 +303,13 @@ function _zipcart_phpzip($files) {
     drupal_access_denied();
     return FALSE;
   }
+}
+
+/**
+ * Invoke hook_zipcart_download_complete() when download completed.
+ */
+function _zipcart_download_complete($filename, $files) {
+  module_invoke_all('zipcart_download_complete', $filename, $files);
 }
 
 /**
@@ -345,9 +353,11 @@ function theme_zipcart_download($text, $path, $options = array()) {
 }
 
 /**
+ * Implements hook_zipcart_download_complete().
+ *
  * Clean up built zips as required.
  */
-function _zipcart_remove_zip($filename) {
+function zipcart_zipcart_download_complete($filename, $files) {
   unlink($filename);
 }
 
