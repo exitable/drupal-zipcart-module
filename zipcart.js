@@ -21,8 +21,10 @@ Drupal.zipcart = {
     }
 
     e.preventDefault();
+    // handle subdir Drupal installation
+    filePath = $(a).attr('href').replace(Drupal.settings.basePath, '');
     // add AJAX parameter
-    filePath = $(a).attr('href').replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax);
+    filePath = filePath.replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax) ;
     // add Drupal basePath
     filePath = Drupal.settings.basePath + filePath;
     // remove multiple slashes at start
