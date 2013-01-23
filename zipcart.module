@@ -220,6 +220,11 @@ function zipcart_get_zip() {
           }
         }
       }
+      else {
+        watchdog('zipcart', 'Unable to create zip in %zipcart_dir', array('%zipcart_dir' => $zipcart_dir), WATCHDOG_ERROR);
+        drupal_set_message(t('Unable to write to %zipcart_dir.', array('%zipcart_dir' => $zipcart_dir)), 'error');
+        drupal_goto();
+      }
     }
   }
 }
