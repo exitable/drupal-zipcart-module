@@ -15,8 +15,8 @@
           }
         }
         e.preventDefault();
-  			// handle subdir Drupal installation
-  			filePath = $(a).attr('href').replace(Drupal.settings.basePath, '');
+        // handle subdir Drupal installation
+        filePath = $(a).attr('href').replace(Drupal.settings.basePath, '');
         // add AJAX parameter
         filePath = filePath.replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax) ;
         // add Drupal basePath
@@ -86,12 +86,7 @@
             // probably not permitted - handle file access restriction here
           }
         });
-
       });
-
-
-
     }
   };
-
 })(jQuery);
