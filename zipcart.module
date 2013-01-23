@@ -372,7 +372,7 @@ function zipcart_preprocess_zipcart_block_downloads(&$variables) {
       'path_add_ajax' => ZIPCART_PATH_ADD . '/AJAX',
     ),
   );
-  drupal_add_js(, 'setting');
+  drupal_add_js($settings, 'setting');
   $variables['count'] = (!empty($_SESSION['zipcart']['files'])) ? sizeof($_SESSION['zipcart']['files']) : 0;
   $variables['files'] = (!empty($_SESSION['zipcart']['files'])) ? $_SESSION['zipcart']['files'] : NULL;
 }
