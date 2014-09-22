@@ -26,7 +26,7 @@ There are two steps to using this module.
   This function simply wraps l(), so the parameters are similar: $html, $path, $options.
   Eg: You have a file at sites/default/files/file1.txt to make available for download:
   
-    <?php print theme('zipcart_download', 'Download file', 'sites/default/files/file1.txt'); ?>
+    <?php print theme('zipcart_download', array('text' => 'Download file', 'path' => 'sites/default/files/file1.txt')); ?>
 
 * You need to expose the "ZipCart Downloads" block via admin/structure/block
   This block provides the link for users to build the zip with their files and download it.
