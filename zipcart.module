@@ -537,7 +537,19 @@ function theme_zipcart_download($vars = array()) {
     'query' => _zipcart_get_destination_alias(),
   );
   $options = array_merge($default_options, $options);
-  return l($text, ZIPCART_PATH_ADD . '/' . $fid, $options);
+
+  if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$fid])) {
+    $options['attributes']['class'] .= ' remove-from-zipcart';
+    $text .= ' (-)';
+    $link = ZIPCART_PATH_REMOVE . '/';
+  }
+  else {
+    $options['attributes']['class'] .= ' add-to-zipcart';
+    $text .= ' (+)';
+    $link = ZIPCART_PATH_ADD . '/';
+  }
+
+  return l($text, $link . $fid, $options);
 }
 
 /**
