@@ -39,10 +39,14 @@
             if (data.action == 'added') {
                 $(a).attr('href', $(a).attr('href').replace(Drupal.settings.zipcart.path_add,Drupal.settings.zipcart.path_remove));
                 $(a).text(linkText.replace('(+)','(-)'));
+                $(a).removeClass('add-to-cart');
+                $(a).addClass('remove-from-cart');
             }
             else {
                 $(a).attr('href', $(a).attr('href').replace(Drupal.settings.zipcart.path_remove,Drupal.settings.zipcart.path_add));
                 $(a).text(linkText.replace('(-)','(+)'));
+                $(a).removeClass('remove-from-cart');
+                $(a).addClass('add-to-cart');
             }
             Drupal.settings.zipcart.cart = data.cart;
             cart = $('.zipcart-block-downloads');
