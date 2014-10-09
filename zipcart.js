@@ -17,8 +17,14 @@
         e.preventDefault();
         // handle subdir Drupal installation
         filePath = $(a).attr('href').replace(Drupal.settings.basePath, '');
-        // add AJAX parameter
-        filePath = filePath.replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax) ;
+        if (filePath.indexOf(Drupal.settings.zipcart.path_add) != -1) {
+          // add AJAX parameter - add
+          filePath = filePath.replace(Drupal.settings.zipcart.path_add, Drupal.settings.zipcart.path_add_ajax);
+        }
+        else {
+          // add AJAX parameter - remove
+          filePath = filePath.replace(Drupal.settings.zipcart.path_remove, Drupal.settings.zipcart.path_remove_ajax);
+        }
         // add Drupal basePath
         filePath = Drupal.settings.basePath + filePath;
         // remove multiple slashes at start
@@ -29,6 +35,15 @@
           'dataType': 'json',
 
           success: function(data, textStatus, req) {
+            var linkText = $(a).text();
+            if (data.action == 'added') {
+                $(a).attr('href', $(a).attr('href').replace(Drupal.settings.zipcart.path_add,Drupal.settings.zipcart.path_remove));
+                $(a).text(linkText.replace('(+)','(-)'));
+            }
+            else {
+                $(a).attr('href', $(a).attr('href').replace(Drupal.settings.zipcart.path_remove,Drupal.settings.zipcart.path_add));
+                $(a).text(linkText.replace('(-)','(+)'));
+            }
             Drupal.settings.zipcart.cart = data.cart;
             cart = $('.zipcart-block-downloads');
             // copy the element for animation - with thanks to jQuery 'fake' plugin by Carl Fürstenberg

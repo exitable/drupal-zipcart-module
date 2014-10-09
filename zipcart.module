@@ -6,6 +6,7 @@
  */
 
 define('ZIPCART_PATH_ADD', 'zipcart/add');
+define('ZIPCART_PATH_REMOVE', 'zipcart/remove');
 define('ZIPCART_PATH_GET', 'zipcart/get');
 
 /**
@@ -35,6 +36,20 @@ function zipcart_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('access zipcart downloads'),
   );
+  $items[ZIPCART_PATH_REMOVE] = array(
+    'page callback' => 'zipcart_remove_file_from_cart',
+    'page arguments' => array( FALSE ),
+    'title' => 'Remove file to Download Cart',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access zipcart downloads'),
+  );
+  $items[ZIPCART_PATH_REMOVE .'/AJAX'] = array(
+    'page callback' => 'zipcart_remove_file_from_cart',
+    'page arguments' => array( TRUE ),
+    'title' => 'Remove file to Download Cart',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access zipcart downloads'),
+  );
   $items[ZIPCART_PATH_GET] = array(
     'page callback' => 'zipcart_get_zip',
     'title' => 'Download Cart Files',
@@ -61,6 +76,12 @@ function zipcart_theme($existing, $type, $theme, $fid) {
         'text' => 'Download',
         'fid' => NULL,
         'options' => array(),
+      ),
+    ),
+    'zipcart_link' => array(
+      'variables' => array(
+        'file' => NULL,
+        'icon_directory' => NULL,
       ),
     ),
   );
@@ -112,6 +133,113 @@ function zipcart_block_content() {
   $count = (!empty($_SESSION['zipcart']['files'])) ? count($_SESSION['zipcart']['files']) : 0;
   $files = (!empty($_SESSION['zipcart']['files'])) ? $_SESSION['zipcart']['files'] : NULL;
   return theme('zipcart_block_downloads', $count, $files);
+}
+
+ /**
+ * Implements hook_field_formatter_info().
+ * @see field_example_field_formatter_view()
+ */
+function zipcart_field_formatter_info() {
+  return array(
+    'file_default' => array(
+      'label' => t('Generic file'),
+      'field types' => array('file','image'),
+    ),
+    'file_table' => array(
+      'label' => t('Table of files'),
+      'field types' => array('file'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ * @see field_example_field_formatter_info()
+ */
+function zipcart_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $options = array(
+    'html' => FALSE,
+    'query' => array('destination' => current_path()),
+    'attributes' => array('class' => array('zipcart')),
+  );
+  if (variable_get('zipcart_field_display', 'link') == 'checkbox') {
+    $options['attributes']['class'][] = 'zipcart-checkbox';
+  }
+  switch ($display['type']) {
+    // This formatter simply outputs a zipcart link
+    case 'file_default':
+      foreach ($items as $delta => $item) {
+        if (empty($item->description)) {
+          $link_text = $item['filename'];
+        }
+        else {
+          $link_text = $item['description'];
+          $options['attributes']['title'] = check_plain($item['filename']);
+        }
+        $options['attributes']['id'] = 'zipcart-id-'.$item['fid'];
+        if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$item['fid']])) {
+          $path = ZIPCART_PATH_REMOVE.'/'.$item['fid'];
+          $link_text .= ' (-)';
+        }
+        else {
+          $path = ZIPCART_PATH_ADD.'/'.$item['fid'];
+          $link_text .= ' (+)';
+        }
+        $mime = check_plain($item['filemime']);
+        $icon_url = file_icon_url((object) $item);
+        $icon = '<img class="file-icon" alt="" title="' . $mime . '" src="' . $icon_url . '" /> ';
+        $element[$delta] = array(
+          '#theme' => 'link',
+          '#text' => $link_text,
+          '#path' => $path,
+          '#options' => $options,
+          '#prefix' => $icon,
+        );
+      }
+      break;
+    // This formatter adds a zipcart download link to a file table
+    case 'file_table':
+      // Some formatters might need to display all values within a single piece
+      // of markup.
+      $rows = array();
+      foreach ($items as $delta => $item) {       
+        if (empty($item->description)) {
+          $link_title = $item['filename'];
+        }
+        else {
+          $link_title = $item['description'];
+        }
+        $link_text = 'Your Downloads';
+        $options['attributes']['id'] = 'zipcart-id-'.$item['fid'];
+        if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$item['fid']])) {
+          $path = ZIPCART_PATH_REMOVE.'/'.$item['fid'];
+          $link_text .= ' (-)';
+        }
+        else {
+          $path = ZIPCART_PATH_ADD.'/'.$item['fid'];
+          $link_text .= ' (+)';
+        }
+        $mime = check_plain($item['filemime']);
+        $icon_url = file_icon_url((object) $item);
+        $icon = '<img class="file-icon" alt="" title="' . $mime . '" src="' . $icon_url . '" /> ';
+        $zipcart_table_link = l($link_text, $path, $options);
+        
+        $rows[] = array(
+            (variable_get('zipcart_remove_hotlink', 0) == 0) ? theme('file_link', array('file' => (object) $item)) : $link_title,
+            $zipcart_table_link,
+            format_size($item['filesize']),
+        );
+      }
+      $element[0] = array(
+        '#theme' => 'table', 
+        '#header' => array(t('Attachment'), t('Your Downloads'), t('Size')), 
+        '#rows' => $rows,
+      );
+      break;
+  }
+
+  return $element;
 }
 
 /**
@@ -174,6 +302,7 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
   $result = array(
     'cart' => $_SESSION['zipcart']['files'],
     'result' => $success,
+    'action' => 'added',
   );
   if ($ajax) {
     drupal_json_output($result);
@@ -188,6 +317,44 @@ function zipcart_add_file_to_cart($ajax = FALSE) {
     }
     else {
       drupal_set_message(t('The file !filename could not be added to your cart.', array('!filename' => check_plain($filename))));
+    }
+    drupal_goto();
+  }
+}
+
+/**
+ * Remove a file path from a user's $_SESSION.
+ *
+ * Check the user has permission to access the file here, warn if they do not.
+ */
+function zipcart_remove_file_from_cart($ajax = FALSE) {
+  $fid = func_get_arg(1);
+  $success = FALSE;
+  $file = file_load($fid);
+  if (isset($_SESSION['zipcart']['files'][$fid])) {
+    // file is in cart, remove now
+    unset($_SESSION['zipcart']['files'][$fid]);
+    $success = TRUE;
+  }
+
+  $result = array(
+    'cart' => $_SESSION['zipcart']['files'],
+    'result' => $success,
+    'action' => 'removed',
+  );
+  if ($ajax) {
+    drupal_json_output($result);
+  }
+  else {
+    if ($success) {
+      $targs = array(
+        '%filename' => check_plain($file->filename),
+        '!download' => l(t('Click here to download remaining files'), 'zipcart/get'),
+      );
+      drupal_set_message(t('The file %filename has been removed from your cart. !download', $targs));
+    }
+    else {
+      drupal_set_message(t('The file !filename could not be removed from your cart.', array('!filename' => check_plain($filename))));
     }
     drupal_goto();
   }
@@ -379,7 +546,7 @@ function zipcart_zipcart_download_complete($filename) {
  */
 function zipcart_preprocess_zipcart_block_downloads(&$variables) {
   drupal_add_js(drupal_get_path('module', 'zipcart') . '/zipcart.js');
-  drupal_add_js(array('zipcart' => array('path_add' => ZIPCART_PATH_ADD, 'path_add_ajax' => ZIPCART_PATH_ADD . '/AJAX')), 'setting');
+  drupal_add_js(array('zipcart' => array('path_add' => ZIPCART_PATH_ADD, 'path_add_ajax' => ZIPCART_PATH_ADD .'/AJAX', 'path_remove' => ZIPCART_PATH_REMOVE, 'path_remove_ajax' => ZIPCART_PATH_REMOVE .'/AJAX',)), 'setting');
   $variables['count'] = (!empty($_SESSION['zipcart']['files'])) ? sizeof($_SESSION['zipcart']['files']) : 0;
   $variables['files'] = (!empty($_SESSION['zipcart']['files'])) ? $_SESSION['zipcart']['files'] : NULL;
 }
