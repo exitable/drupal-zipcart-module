@@ -157,89 +157,95 @@ function zipcart_field_formatter_info() {
  * @see field_example_field_formatter_info()
  */
 function zipcart_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
-  $options = array(
-    'html' => FALSE,
-    'query' => array('destination' => current_path()),
-    'attributes' => array('class' => array('zipcart')),
-  );
-  if (variable_get('zipcart_field_display', 'link') == 'checkbox') {
-    $options['attributes']['class'][] = 'zipcart-checkbox';
-  }
-  switch ($display['type']) {
-    // This formatter simply outputs a zipcart link
-    case 'file_default':
-      foreach ($items as $delta => $item) {
-        if (empty($item->description)) {
-          $link_text = $item['filename'];
+  $zipcart_node_types = variable_get('zipcart_node_types_active', null);
+  if ($zipcart_node_types[$entity->type] === $entity->type) {
+    $element = array();
+    $options = array(
+      'html' => FALSE,
+      'query' => array('destination' => current_path()),
+      'attributes' => array('class' => array('zipcart')),
+    );
+    if (variable_get('zipcart_field_display', 'link') == 'checkbox') {
+      $options['attributes']['class'][] = 'zipcart-checkbox';
+    }
+    switch ($display['type']) {
+      // This formatter simply outputs a zipcart link
+      case 'file_default':
+        foreach ($items as $delta => $item) {
+          if (empty($item->description)) {
+            $link_text = $item['filename'];
+          }
+          else {
+            $link_text = $item['description'];
+            $options['attributes']['title'] = check_plain($item['filename']);
+          }
+          $options['attributes']['id'] = 'zipcart-id-'.$item['fid'];
+          if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$item['fid']])) {
+            $path = ZIPCART_PATH_REMOVE.'/'.$item['fid'];
+            $link_text .= ' (-)';
+          }
+          else {
+            $path = ZIPCART_PATH_ADD.'/'.$item['fid'];
+            $link_text .= ' (+)';
+          }
+          $mime = check_plain($item['filemime']);
+          $icon_url = file_icon_url((object) $item);
+          $icon = '<img class="file-icon" alt="" title="' . $mime . '" src="' . $icon_url . '" /> ';
+          $element[$delta] = array(
+            '#theme' => 'link',
+            '#text' => $link_text,
+            '#path' => $path,
+            '#options' => $options,
+            '#prefix' => $icon,
+          );
         }
-        else {
-          $link_text = $item['description'];
-          $options['attributes']['title'] = check_plain($item['filename']);
+        break;
+      // This formatter adds a zipcart download link to a file table
+      case 'file_table':
+        // Some formatters might need to display all values within a single piece
+        // of markup.
+        $rows = array();
+        foreach ($items as $delta => $item) {       
+          if (empty($item->description)) {
+            $link_title = $item['filename'];
+          }
+          else {
+            $link_title = $item['description'];
+          }
+          $link_text = 'Your Downloads';
+          $options['attributes']['id'] = 'zipcart-id-'.$item['fid'];
+          if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$item['fid']])) {
+            $path = ZIPCART_PATH_REMOVE.'/'.$item['fid'];
+            $link_text .= ' (-)';
+          }
+          else {
+            $path = ZIPCART_PATH_ADD.'/'.$item['fid'];
+            $link_text .= ' (+)';
+          }
+          $mime = check_plain($item['filemime']);
+          $icon_url = file_icon_url((object) $item);
+          $icon = '<img class="file-icon" alt="" title="' . $mime . '" src="' . $icon_url . '" /> ';
+          $zipcart_table_link = l($link_text, $path, $options);
+          
+          $rows[] = array(
+              (variable_get('zipcart_remove_hotlink', 0) == 0) ? theme('file_link', array('file' => (object) $item)) : $link_title,
+              $zipcart_table_link,
+              format_size($item['filesize']),
+          );
         }
-        $options['attributes']['id'] = 'zipcart-id-'.$item['fid'];
-        if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$item['fid']])) {
-          $path = ZIPCART_PATH_REMOVE.'/'.$item['fid'];
-          $link_text .= ' (-)';
-        }
-        else {
-          $path = ZIPCART_PATH_ADD.'/'.$item['fid'];
-          $link_text .= ' (+)';
-        }
-        $mime = check_plain($item['filemime']);
-        $icon_url = file_icon_url((object) $item);
-        $icon = '<img class="file-icon" alt="" title="' . $mime . '" src="' . $icon_url . '" /> ';
-        $element[$delta] = array(
-          '#theme' => 'link',
-          '#text' => $link_text,
-          '#path' => $path,
-          '#options' => $options,
-          '#prefix' => $icon,
+        $element[0] = array(
+          '#theme' => 'table', 
+          '#header' => array(t('Attachment'), t('Your Downloads'), t('Size')), 
+          '#rows' => $rows,
         );
-      }
-      break;
-    // This formatter adds a zipcart download link to a file table
-    case 'file_table':
-      // Some formatters might need to display all values within a single piece
-      // of markup.
-      $rows = array();
-      foreach ($items as $delta => $item) {       
-        if (empty($item->description)) {
-          $link_title = $item['filename'];
-        }
-        else {
-          $link_title = $item['description'];
-        }
-        $link_text = 'Your Downloads';
-        $options['attributes']['id'] = 'zipcart-id-'.$item['fid'];
-        if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$item['fid']])) {
-          $path = ZIPCART_PATH_REMOVE.'/'.$item['fid'];
-          $link_text .= ' (-)';
-        }
-        else {
-          $path = ZIPCART_PATH_ADD.'/'.$item['fid'];
-          $link_text .= ' (+)';
-        }
-        $mime = check_plain($item['filemime']);
-        $icon_url = file_icon_url((object) $item);
-        $icon = '<img class="file-icon" alt="" title="' . $mime . '" src="' . $icon_url . '" /> ';
-        $zipcart_table_link = l($link_text, $path, $options);
-        
-        $rows[] = array(
-            (variable_get('zipcart_remove_hotlink', 0) == 0) ? theme('file_link', array('file' => (object) $item)) : $link_title,
-            $zipcart_table_link,
-            format_size($item['filesize']),
-        );
-      }
-      $element[0] = array(
-        '#theme' => 'table', 
-        '#header' => array(t('Attachment'), t('Your Downloads'), t('Size')), 
-        '#rows' => $rows,
-      );
-      break;
+        break;
+    }
+    return $element;
   }
-
-  return $element;
+  else {
+    $default_formatter = $field['type'] . '_field_formatter_view';
+    return $default_formatter($entity_type, $entity, $field, $instance, $langcode, $items, $display);
+  }
 }
 
 /**
