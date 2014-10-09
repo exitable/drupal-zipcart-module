@@ -59,7 +59,7 @@
             };
             animCallback = function(data) {
               clone.fadeOut().remove();
-              $('.zipcart-download-count').html(Drupal.settings.zipcart.cart.length);
+              $('.zipcart-download-count').html(Object.keys(Drupal.settings.zipcart.cart).length);
             }
             clone.animate(animProps, 'slow', 'swing', animCallback);
           },
