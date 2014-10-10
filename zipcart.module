@@ -539,12 +539,12 @@ function theme_zipcart_download($vars = array()) {
   $options = array_merge($default_options, $options);
 
   if (!empty($_SESSION['zipcart']['files']) && isset($_SESSION['zipcart']['files'][$fid])) {
-    $options['attributes']['class'] .= ' remove-from-zipcart';
+    $options['attributes']['class'] .= ' remove-from-cart';
     $text .= ' (-)';
     $link = ZIPCART_PATH_REMOVE . '/';
   }
   else {
-    $options['attributes']['class'] .= ' add-to-zipcart';
+    $options['attributes']['class'] .= ' add-to-cart';
     $text .= ' (+)';
     $link = ZIPCART_PATH_ADD . '/';
   }
